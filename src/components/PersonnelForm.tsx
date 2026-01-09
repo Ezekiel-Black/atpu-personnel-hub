@@ -19,16 +19,18 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { UserPlus, Plus, X } from 'lucide-react';
 
-const policeRanks: PoliceRank[] = [
-  'PC',
-  'Corporal',
-  'Sergeant',
-  'Senior Sergeant',
-  'Inspector',
-  'Chief Inspector',
-  'Superintendent',
-  'Senior Superintendent',
-  'Commissioner',
+const policeRanks: { value: PoliceRank; label: string }[] = [
+  { value: 'PC', label: 'Police Constable (PC)' },
+  { value: 'CPL', label: 'Corporal (CPL)' },
+  { value: 'SGT', label: 'Sergeant (SGT)' },
+  { value: 'S/SGT', label: 'Senior Sergeant (S/SGT)' },
+  { value: 'IP', label: 'Inspector (IP)' },
+  { value: 'CI', label: 'Chief Inspector (CI)' },
+  { value: 'ASP', label: 'Assistant Superintendent of Police (ASP)' },
+  { value: 'SP', label: 'Superintendent of Police (SP)' },
+  { value: 'SSP', label: 'Senior Superintendent of Police (SSP)' },
+  { value: 'ACP', label: 'Assistant Commissioner of Police (ACP)' },
+  { value: 'CP', label: 'Commissioner of Police (CP)' },
 ];
 
 const baseSchema = z.object({
@@ -41,7 +43,7 @@ const baseSchema = z.object({
 
 const policeSchema = baseSchema.extend({
   category: z.literal('police'),
-  rank: z.enum(['PC', 'Corporal', 'Sergeant', 'Senior Sergeant', 'Inspector', 'Chief Inspector', 'Superintendent', 'Senior Superintendent', 'Commissioner']),
+  rank: z.enum(['PC', 'CPL', 'SGT', 'S/SGT', 'IP', 'CI', 'ASP', 'SP', 'SSP', 'ACP', 'CP']),
   forceNumber: z.string().min(4, 'Invalid force number'),
   title: z.string().optional(),
   department: z.string().min(2, 'Department required'),
@@ -272,8 +274,8 @@ export function PersonnelForm() {
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
                   {policeRanks.map((rank) => (
-                    <SelectItem key={rank} value={rank}>
-                      {rank}
+                    <SelectItem key={rank.value} value={rank.value}>
+                      {rank.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

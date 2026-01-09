@@ -2,14 +2,16 @@ export type PersonnelCategory = 'civilian' | 'police' | 'student';
 
 export type PoliceRank = 
   | 'PC' 
-  | 'Corporal' 
-  | 'Sergeant' 
-  | 'Senior Sergeant' 
-  | 'Inspector'
-  | 'Chief Inspector'
-  | 'Superintendent'
-  | 'Senior Superintendent'
-  | 'Commissioner';
+  | 'CPL' 
+  | 'SGT' 
+  | 'S/SGT' 
+  | 'IP'
+  | 'CI'
+  | 'ASP'
+  | 'SP'
+  | 'SSP'
+  | 'ACP'
+  | 'CP';
 
 export type PersonnelStatus = 'active' | 'attachment_ended' | 'inactive';
 
