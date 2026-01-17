@@ -4,7 +4,6 @@ import {
   LayoutDashboard, 
   UserPlus, 
   Search, 
-  Shield,
   Menu,
   X,
   User,
@@ -21,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import atpuLogo from '@/assets/atpu-logo.png';
 
 interface LayoutProps {
   children: ReactNode;
@@ -57,9 +57,11 @@ export function Layout({ children }: LayoutProps) {
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
             <Link to="/" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                <Shield className="h-6 w-6 text-primary-foreground" />
-              </div>
+              <img 
+                src={atpuLogo} 
+                alt="ATPU Logo" 
+                className="h-12 w-auto object-contain"
+              />
               <div className="hidden sm:block">
                 <h1 className="text-lg font-bold leading-tight">ATPU</h1>
                 <p className="text-xs text-muted-foreground">Personnel Management</p>

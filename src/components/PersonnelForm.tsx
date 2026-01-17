@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { addWeeks } from 'date-fns';
 import { usePersonnel } from '@/contexts/PersonnelContext';
-import { PersonnelCategory, PoliceRank } from '@/types/personnel';
+import { PersonnelCategory, PoliceRank, Referee } from '@/types/personnel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import { RefereeForm } from '@/components/RefereeForm';
 import { UserPlus, Plus, X } from 'lucide-react';
 
 const policeRanks: { value: PoliceRank; label: string }[] = [
@@ -66,9 +67,11 @@ type FormData = z.infer<typeof policeSchema> | z.infer<typeof civilianSchema> | 
 
 export function PersonnelForm() {
   const navigate = useNavigate();
-  const { addPersonnel } = usePersonnel();
+  const { addPersonnel, canEdit } = usePersonnel();
   const [category, setCategory] = useState<PersonnelCategory>('police');
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>(['']);
+  const [referee, setReferee] = useState<Partial<Referee> | null>(null);
+  const [refereeErrors, setRefereeErrors] = useState<Record<string, string>>({});
 
   const getSchema = () => {
     switch (category) {
@@ -118,7 +121,69 @@ export function PersonnelForm() {
     setValue('phoneNumbers', newPhones);
   };
 
+  const validateReferee = (): boolean => {
+    if (category !== 'student') return true;
+    
+    const newErrors: Record<string, string> = {};
+    
+    if (!referee?.refereeType) {
+      newErrors.refereeType = 'Referee type is required';
+    }
+    if (!referee?.fullName?.trim()) {
+      newErrors.fullName = 'Full name is required';
+    }
+    if (!referee?.email?.trim()) {
+      newErrors.email = 'Email is required';
+    }
+    if (!referee?.nationalId?.trim()) {
+      newErrors.nationalId = 'National ID is required';
+    }
+    if (!referee?.phoneNumbers?.some(p => p.trim())) {
+      newErrors.phoneNumbers = 'At least one phone number is required';
+    }
+
+    // Type-specific validation
+    if (referee?.refereeType === 'former_student') {
+      if (!(referee as any)?.formerOfficeAttachedTo?.trim()) {
+        newErrors.formerOfficeAttachedTo = 'Former office is required';
+      }
+      if (!(referee as any)?.employmentStatus) {
+        newErrors.employmentStatus = 'Employment status is required';
+      }
+      if ((referee as any)?.employmentStatus === 'employed' && !(referee as any)?.placeOfEmployment?.trim()) {
+        newErrors.placeOfEmployment = 'Place of employment is required';
+      }
+    }
+
+    if (referee?.refereeType === 'non_atpu_officer') {
+      if (!(referee as any)?.rank) {
+        newErrors.rank = 'Rank is required';
+      }
+      if (!(referee as any)?.forceNumber?.trim()) {
+        newErrors.forceNumber = 'Force number is required';
+      }
+      if (!(referee as any)?.serviceBody) {
+        newErrors.serviceBody = 'Service body is required';
+      }
+      if ((referee as any)?.serviceBody === 'Other' && !(referee as any)?.serviceBodyOther?.trim()) {
+        newErrors.serviceBodyOther = 'Please specify service body';
+      }
+    }
+
+    setRefereeErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const onSubmit = (data: FormData) => {
+    if (!validateReferee()) {
+      toast({
+        title: 'Referee Required',
+        description: 'Please complete all referee details for student attachees.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       let personnelData: any = {
         ...data,
@@ -132,6 +197,10 @@ export function PersonnelForm() {
           ...personnelData,
           attachmentStartDate: startDate,
           attachmentEndDate: endDate,
+          referee: {
+            ...referee,
+            phoneNumbers: referee?.phoneNumbers?.filter(p => p.trim()) || [],
+          },
         };
       }
 
@@ -144,6 +213,7 @@ export function PersonnelForm() {
       
       reset();
       setPhoneNumbers(['']);
+      setReferee(null);
       navigate('/search');
     } catch (error) {
       toast({
@@ -157,6 +227,10 @@ export function PersonnelForm() {
   const handleCategoryChange = (value: PersonnelCategory) => {
     setCategory(value);
     setValue('category', value);
+    if (value !== 'student') {
+      setReferee(null);
+      setRefereeErrors({});
+    }
   };
 
   return (
@@ -360,52 +434,62 @@ export function PersonnelForm() {
 
       {/* Student Attachee Fields */}
       {category === 'student' && (
-        <div className="form-section">
-          <h3 className="text-lg font-semibold mb-4">Attachment Details</h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="attachmentStartDate">Attachment Start Date *</Label>
-              <Input
-                id="attachmentStartDate"
-                type="date"
-                {...register('attachmentStartDate' as any)}
-                className="bg-background"
-              />
-              {(errors as any).attachmentStartDate && (
-                <p className="text-sm text-destructive">{(errors as any).attachmentStartDate.message}</p>
-              )}
-            </div>
+        <>
+          <div className="form-section">
+            <h3 className="text-lg font-semibold mb-4">Attachment Details</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="attachmentStartDate">Attachment Start Date *</Label>
+                <Input
+                  id="attachmentStartDate"
+                  type="date"
+                  {...register('attachmentStartDate' as any)}
+                  className="bg-background"
+                />
+                {(errors as any).attachmentStartDate && (
+                  <p className="text-sm text-destructive">{(errors as any).attachmentStartDate.message}</p>
+                )}
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="attachmentDurationWeeks">Duration (Weeks) *</Label>
-              <Input
-                id="attachmentDurationWeeks"
-                type="number"
-                min={1}
-                max={52}
-                {...register('attachmentDurationWeeks' as any, { valueAsNumber: true })}
-                placeholder="e.g., 12"
-                className="bg-background"
-              />
-              {(errors as any).attachmentDurationWeeks && (
-                <p className="text-sm text-destructive">{(errors as any).attachmentDurationWeeks.message}</p>
-              )}
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="attachmentDurationWeeks">Duration (Weeks) *</Label>
+                <Input
+                  id="attachmentDurationWeeks"
+                  type="number"
+                  min={1}
+                  max={52}
+                  {...register('attachmentDurationWeeks' as any, { valueAsNumber: true })}
+                  placeholder="e.g., 12"
+                  className="bg-background"
+                />
+                {(errors as any).attachmentDurationWeeks && (
+                  <p className="text-sm text-destructive">{(errors as any).attachmentDurationWeeks.message}</p>
+                )}
+              </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="officeAttachedTo">Office Attached To *</Label>
-              <Input
-                id="officeAttachedTo"
-                {...register('officeAttachedTo' as any)}
-                placeholder="e.g., ICT Department"
-                className="bg-background"
-              />
-              {(errors as any).officeAttachedTo && (
-                <p className="text-sm text-destructive">{(errors as any).officeAttachedTo.message}</p>
-              )}
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="officeAttachedTo">Office Attached To *</Label>
+                <Input
+                  id="officeAttachedTo"
+                  {...register('officeAttachedTo' as any)}
+                  placeholder="e.g., ICT Department"
+                  className="bg-background"
+                />
+                {(errors as any).officeAttachedTo && (
+                  <p className="text-sm text-destructive">{(errors as any).officeAttachedTo.message}</p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Referee Section */}
+          <RefereeForm
+            value={referee}
+            onChange={setReferee}
+            errors={refereeErrors}
+            disabled={!canEdit}
+          />
+        </>
       )}
 
       {/* Submit Button */}
