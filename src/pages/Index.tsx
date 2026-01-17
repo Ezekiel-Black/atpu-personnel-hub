@@ -14,6 +14,7 @@ import {
   GraduationCap,
   BarChart3
 } from 'lucide-react';
+import atpuLogo from '@/assets/atpu-logo.png';
 
 const Index = () => {
   const { stats, canEdit, canDelete } = usePersonnel();
@@ -24,9 +25,11 @@ const Index = () => {
         {/* Welcome Header */}
         <div className="page-header">
           <div className="flex items-center gap-4 mb-4">
-            <div className="h-16 w-16 rounded-xl bg-primary flex items-center justify-center">
-              <Shield className="h-8 w-8 text-primary-foreground" />
-            </div>
+            <img 
+              src={atpuLogo} 
+              alt="ATPU Logo" 
+              className="h-20 w-auto object-contain"
+            />
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
                 Welcome to ATPU Personnel Database

@@ -1,5 +1,5 @@
 import { format, differenceInDays, differenceInWeeks, isBefore } from 'date-fns';
-import { Personnel, StudentAttachee, PoliceOfficer, CivilianStaff } from '@/types/personnel';
+import { Personnel, StudentAttachee, PoliceOfficer, CivilianStaff, Referee } from '@/types/personnel';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Printer, Shield, User, GraduationCap, Clock, AlertTriangle } from 'lucide-react';
+import { Printer, Shield, User, GraduationCap, Clock, AlertTriangle, UserCheck, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PersonnelProfileProps {
@@ -16,6 +16,23 @@ interface PersonnelProfileProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const getRankLabel = (rank: string): string => {
+  const ranks: Record<string, string> = {
+    'PC': 'Police Constable (PC)',
+    'CPL': 'Corporal (CPL)',
+    'SGT': 'Sergeant (SGT)',
+    'S/SGT': 'Senior Sergeant (S/SGT)',
+    'IP': 'Inspector (IP)',
+    'CI': 'Chief Inspector (CI)',
+    'ASP': 'Assistant Superintendent of Police (ASP)',
+    'SP': 'Superintendent of Police (SP)',
+    'SSP': 'Senior Superintendent of Police (SSP)',
+    'ACP': 'Assistant Commissioner of Police (ACP)',
+    'CP': 'Commissioner of Police (CP)',
+  };
+  return ranks[rank] || rank;
+};
 
 export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfileProps) {
   if (!person) return null;
@@ -47,6 +64,19 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
         return 'Student Attachee';
       default:
         return category;
+    }
+  };
+
+  const getRefereeTypeLabel = (type: string): string => {
+    switch (type) {
+      case 'atpu_staff':
+        return 'ATPU Staff';
+      case 'former_student':
+        return 'Former Student';
+      case 'non_atpu_officer':
+        return 'Non-ATPU Officer (External)';
+      default:
+        return type;
     }
   };
 
@@ -91,6 +121,84 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
     );
   };
 
+  const renderRefereeSection = () => {
+    if (person.category !== 'student') return null;
+    const student = person as StudentAttachee;
+    const referee = student.referee;
+    
+    if (!referee) return null;
+
+    return (
+      <>
+        <Separator />
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <UserCheck className="h-5 w-5 text-primary" />
+            <h4 className="font-semibold">Referee / Immediate Person In-Charge</h4>
+            {referee.refereeType === 'non_atpu_officer' && (
+              <span className="bg-warning/20 text-warning text-xs px-2 py-0.5 rounded flex items-center gap-1">
+                <ExternalLink className="h-3 w-3" />
+                External
+              </span>
+            )}
+          </div>
+          <dl className="divide-y divide-border">
+            <InfoRow label="Referee Type" value={getRefereeTypeLabel(referee.refereeType)} />
+            <InfoRow label="Full Name" value={referee.fullName} />
+            <InfoRow label="National ID" value={referee.nationalId} />
+            <InfoRow label="Email" value={referee.email} />
+            <InfoRow label="Phone Numbers" value={referee.phoneNumbers?.join(', ')} />
+            
+            {referee.refereeType === 'atpu_staff' && (
+              <>
+                <InfoRow label="Category" value={referee.personnelCategory === 'police' ? 'Police Officer' : 'Civilian Staff'} />
+                {referee.personnelCategory === 'police' && (
+                  <>
+                    <InfoRow label="Rank" value={referee.rank ? getRankLabel(referee.rank) : '-'} />
+                    <InfoRow label="Force Number" value={referee.forceNumber} />
+                  </>
+                )}
+                {referee.personnelCategory === 'civilian' && (
+                  <InfoRow label="Job Title" value={referee.jobTitle} />
+                )}
+                <InfoRow label="Department" value={referee.department} />
+              </>
+            )}
+
+            {referee.refereeType === 'former_student' && (
+              <>
+                <InfoRow label="Former Office" value={referee.formerOfficeAttachedTo} />
+                <InfoRow label="Employment Status" value={
+                  referee.employmentStatus === 'employed' ? 'Employed' :
+                  referee.employmentStatus === 'unemployed' ? 'Unemployed' : 'Student'
+                } />
+                {referee.employmentStatus === 'employed' && (
+                  <>
+                    <InfoRow label="Place of Employment" value={referee.placeOfEmployment} />
+                    <InfoRow label="Employer Contact" value={
+                      [referee.employerPhone, referee.employerEmail].filter(Boolean).join(' | ') || '-'
+                    } />
+                    <InfoRow label="Employment Confirmed By" value={referee.employmentConfirmationPerson} />
+                  </>
+                )}
+              </>
+            )}
+
+            {referee.refereeType === 'non_atpu_officer' && (
+              <>
+                <InfoRow label="Rank" value={getRankLabel(referee.rank)} />
+                <InfoRow label="Force Number" value={referee.forceNumber} />
+                <InfoRow label="Service Body" value={
+                  referee.serviceBody === 'Other' ? referee.serviceBodyOther : referee.serviceBody
+                } />
+              </>
+            )}
+          </dl>
+        </div>
+      </>
+    );
+  };
+
   const InfoRow = ({ label, value }: { label: string; value: string | undefined }) => (
     <div className="grid grid-cols-3 gap-4 py-2">
       <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
@@ -100,7 +208,7 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-card print-friendly">
+      <DialogContent className="max-w-2xl bg-card print-friendly max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -155,7 +263,7 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
             <div>
               <h4 className="font-semibold mb-3">Police Officer Details</h4>
               <dl className="divide-y divide-border">
-                <InfoRow label="Rank" value={(person as PoliceOfficer).rank} />
+                <InfoRow label="Rank" value={getRankLabel((person as PoliceOfficer).rank)} />
                 <InfoRow label="Force Number" value={(person as PoliceOfficer).forceNumber} />
                 <InfoRow label="Title" value={(person as PoliceOfficer).title} />
                 <InfoRow label="Department" value={(person as PoliceOfficer).department} />
@@ -193,6 +301,9 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
               </dl>
             </div>
           )}
+
+          {/* Referee Section for Students */}
+          {renderRefereeSection()}
 
           <Separator />
 
