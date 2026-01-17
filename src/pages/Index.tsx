@@ -87,7 +87,7 @@ const Index = () => {
             <StatCard
               title="Police Officers"
               value={stats.policeOfficers}
-              icon={<Shield className="h-5 w-5" />}
+              icon={<img src={atpuLogo} alt="ATPU" className="h-5 w-5 object-contain" />}
               description="Active officers on duty"
               variant="primary"
             />
