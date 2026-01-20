@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Printer, Shield, User, GraduationCap, Clock, AlertTriangle, UserCheck, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import atpuLogo from '@/assets/atpu-logo.png';
 
 interface PersonnelProfileProps {
   person: Personnel | null;
@@ -210,22 +209,7 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-card print-friendly max-h-[90vh] overflow-y-auto">
-        {/* Print Header - Only visible when printing */}
-        <div className="hidden print:block print:mb-6">
-          <div className="flex flex-col items-center text-center">
-            <img 
-              src={atpuLogo} 
-              alt="ATPU Logo" 
-              className="h-24 w-auto object-contain mb-4"
-            />
-            <h1 className="text-xl font-bold uppercase tracking-wide">
-              ANTI-TERROR POLICE UNIT PERSONNEL PROFILE
-            </h1>
-          </div>
-          <Separator className="mt-6" />
-        </div>
-
-        <DialogHeader className="print:hidden">
+        <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-primary/10 p-3 text-primary">
@@ -243,7 +227,7 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 mt-4 print:mt-0">
+        <div className="space-y-6 mt-4">
           {/* Status Badge */}
           <div className="flex items-center gap-2">
             <span

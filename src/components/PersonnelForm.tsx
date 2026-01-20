@@ -65,32 +65,10 @@ const studentSchema = baseSchema.extend({
 
 type FormData = z.infer<typeof policeSchema> | z.infer<typeof civilianSchema> | z.infer<typeof studentSchema>;
 
-// Wrapper component to handle category selection and force form remount
 export function PersonnelForm() {
-  const [category, setCategory] = useState<PersonnelCategory>('police');
-
-  const handleCategoryChange = (value: PersonnelCategory) => {
-    setCategory(value);
-  };
-
-  // Key forces form to remount when category changes, ensuring correct schema
-  return (
-    <PersonnelFormInner 
-      key={category} 
-      category={category} 
-      onCategoryChange={handleCategoryChange} 
-    />
-  );
-}
-
-interface PersonnelFormInnerProps {
-  category: PersonnelCategory;
-  onCategoryChange: (value: PersonnelCategory) => void;
-}
-
-function PersonnelFormInner({ category, onCategoryChange }: PersonnelFormInnerProps) {
   const navigate = useNavigate();
   const { addPersonnel, canEdit } = usePersonnel();
+  const [category, setCategory] = useState<PersonnelCategory>('police');
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>(['']);
   const [referee, setReferee] = useState<Partial<Referee> | null>(null);
   const [refereeErrors, setRefereeErrors] = useState<Record<string, string>>({});
@@ -117,7 +95,7 @@ function PersonnelFormInner({ category, onCategoryChange }: PersonnelFormInnerPr
   } = useForm<FormData>({
     resolver: zodResolver(getSchema()),
     defaultValues: {
-      category,
+      category: 'police',
       phoneNumbers: [''],
     },
   });
@@ -246,12 +224,13 @@ function PersonnelFormInner({ category, onCategoryChange }: PersonnelFormInnerPr
     }
   };
 
-  const handleCategoryChangeInternal = (value: PersonnelCategory) => {
+  const handleCategoryChange = (value: PersonnelCategory) => {
+    setCategory(value);
+    setValue('category', value);
     if (value !== 'student') {
       setReferee(null);
       setRefereeErrors({});
     }
-    onCategoryChange(value);
   };
 
   return (
@@ -261,7 +240,7 @@ function PersonnelFormInner({ category, onCategoryChange }: PersonnelFormInnerPr
         <h3 className="text-lg font-semibold mb-4">Personnel Category</h3>
         <div className="space-y-2">
           <Label htmlFor="category">Select Category *</Label>
-          <Select value={category} onValueChange={handleCategoryChangeInternal}>
+          <Select value={category} onValueChange={handleCategoryChange}>
             <SelectTrigger className="bg-background">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
