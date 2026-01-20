@@ -216,13 +216,13 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
             <img 
               src={atpuLogo} 
               alt="ATPU Logo" 
-              className="h-20 w-auto object-contain mb-3"
+              className="h-24 w-auto object-contain mb-4"
             />
-            <h1 className="text-xl font-bold text-foreground">
-              Anti-Terror Police Unit Personnel Profile
+            <h1 className="text-xl font-bold uppercase tracking-wide">
+              ANTI-TERROR POLICE UNIT PERSONNEL PROFILE
             </h1>
           </div>
-          <Separator className="mt-4" />
+          <Separator className="mt-6" />
         </div>
 
         <DialogHeader className="print:hidden">
