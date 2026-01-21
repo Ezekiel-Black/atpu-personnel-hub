@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Printer, Shield, User, GraduationCap, Clock, AlertTriangle, UserCheck, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import atpuLogo from '@/assets/atpu-logo.png';
 
 interface PersonnelProfileProps {
   person: Personnel | null;
@@ -209,7 +210,13 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-card print-friendly max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+        {/* Print-only header with branding */}
+        <div className="print-header hidden print:flex">
+          <img src={atpuLogo} alt="ATPU Logo" />
+          <h1>Anti-Terror Police Unit Personnel Profile</h1>
+        </div>
+
+        <DialogHeader className="no-print">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-primary/10 p-3 text-primary">
@@ -220,16 +227,29 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
                 <p className="text-sm text-muted-foreground">{getCategoryLabel(person.category)}</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={handlePrint} className="no-print">
+            <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className="h-4 w-4 mr-2" />
               Print
             </Button>
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 mt-4">
+        <div className="space-y-6 mt-4 print-content">
+          {/* Print-only name header */}
+          <div className="hidden print:block print-section mb-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="text-primary">
+                {getCategoryIcon(person.category)}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">{person.fullName}</h2>
+                <p className="text-sm text-muted-foreground">{getCategoryLabel(person.category)}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Status Badge */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 print-section">
             <span
               className={cn(
                 'status-badge',
@@ -241,12 +261,14 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
           </div>
 
           {/* Attachment Countdown for Students */}
-          {renderAttachmentCountdown()}
+          <div className="print-section">
+            {renderAttachmentCountdown()}
+          </div>
 
           <Separator />
 
           {/* Basic Information */}
-          <div>
+          <div className="print-section">
             <h4 className="font-semibold mb-3">Basic Information</h4>
             <dl className="divide-y divide-border">
               <InfoRow label="Full Name" value={person.fullName} />
@@ -260,7 +282,7 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
 
           {/* Category-specific Information */}
           {person.category === 'police' && (
-            <div>
+            <div className="print-section">
               <h4 className="font-semibold mb-3">Police Officer Details</h4>
               <dl className="divide-y divide-border">
                 <InfoRow label="Rank" value={getRankLabel((person as PoliceOfficer).rank)} />
@@ -272,7 +294,7 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
           )}
 
           {person.category === 'civilian' && (
-            <div>
+            <div className="print-section">
               <h4 className="font-semibold mb-3">Civilian Staff Details</h4>
               <dl className="divide-y divide-border">
                 <InfoRow label="Job Title" value={(person as CivilianStaff).jobTitle} />
@@ -282,7 +304,7 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
           )}
 
           {person.category === 'student' && (
-            <div>
+            <div className="print-section">
               <h4 className="font-semibold mb-3">Attachment Details</h4>
               <dl className="divide-y divide-border">
                 <InfoRow label="Office Attached To" value={(person as StudentAttachee).officeAttachedTo} />
@@ -302,13 +324,15 @@ export function PersonnelProfile({ person, open, onOpenChange }: PersonnelProfil
             </div>
           )}
 
-          {/* Referee Section for Students */}
-          {renderRefereeSection()}
+          {/* Referee Section for Students - with page break if needed */}
+          <div className="print-section">
+            {renderRefereeSection()}
+          </div>
 
           <Separator />
 
           {/* Record Information */}
-          <div>
+          <div className="print-section">
             <h4 className="font-semibold mb-3">Record Information</h4>
             <dl className="divide-y divide-border">
               <InfoRow label="Created" value={format(new Date(person.createdAt), 'PPP')} />
